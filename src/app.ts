@@ -13,7 +13,7 @@ import productRoute from "./routes/products.js";
 import orderRoute from "./routes/order.js";
 import paymentRoute from "./routes/payment.js";
 import dashboardRoute from "./routes/stats.js";
-
+import Redis from 'ioredis';
 
 
 config({
@@ -23,12 +23,14 @@ config({
 const port = process.env.PORT || 4000;
 const mongoURI = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
-const redisURI = process.env.REDIS_URI || "";
+// const redisURI = process.env.REDIS_URI || "";
 const clientURL = process.env.CLIENT_URL || "";
 export const redisTTL = process.env.REDIS_TTL || 60 * 60 * 4;
 
 connectDB(mongoURI);
-export const redis = connectRedis(redisURI);
+// export const redis = connectRedis(redisURI);
+export const redis = new Redis(process.env.REDIS_URI);
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
