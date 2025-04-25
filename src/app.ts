@@ -29,7 +29,13 @@ export const redisTTL = process.env.REDIS_TTL || 60 * 60 * 4;
 
 connectDB(mongoURI);
 // export const redis = connectRedis(redisURI);
-export const redis = new Redis(process.env.REDIS_URI);
+export const redis = new Redis(process.env.REDIS_URI!, {
+  connectTimeout: 10000, // 10 seconds
+  tls: {}, // Important for rediss://
+});
+redis.on("error", (err) => {
+  console.error("Redis error", err);
+});
 
 
 cloudinary.config({
