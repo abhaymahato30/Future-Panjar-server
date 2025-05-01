@@ -20,7 +20,7 @@ config({
   path: "./.env",
 });
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 const mongoURI = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
 // const redisURI = process.env.REDIS_URI || "";
@@ -52,7 +52,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: "https://future-punjar-frontend.vercel.app",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
