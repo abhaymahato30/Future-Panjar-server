@@ -72,6 +72,12 @@ app.use("/api/v1/dashboard", dashboardRoute);
 app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);
 
+
+//check the backend is live or not 
+app.get("/health", (req, res) => {
+  res.status(200).send("Server is alive");
+});
+
 app.listen(port, () => {
   console.log(`Express is working on http://localhost:${port}`);
 });
