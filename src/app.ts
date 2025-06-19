@@ -7,6 +7,8 @@ import Stripe from "stripe";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
 
+
+
 // Importing Routes
 import userRoute from "./routes/user.js";
 import productRoute from "./routes/products.js";
@@ -48,8 +50,12 @@ export const stripe = new Stripe(stripeKey);
 
 const app = express();
 
+
 app.use(express.json());
 app.use(morgan("dev"));
+
+// cors
+
 app.use(
   cors({
     origin: "*",
@@ -57,6 +63,8 @@ app.use(
     credentials: true,
   })
 );
+
+
 
 app.get("/", (req, res) => {
   res.send("API Working with /api/v1");
