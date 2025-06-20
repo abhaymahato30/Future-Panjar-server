@@ -17,25 +17,28 @@ const razorpay = new Razorpay({
 
 // ✅ Create Razorpay Order
 export const createPaymentIntent = TryCatch(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.query;
+  async (
+    req: Request<
+      any,
+      any,
+      {
+        userId: string;
+        items: OrderItemType[];
+        shippingInfo: ShippingInfoType;
+        coupon?: string;
+      }
+    >,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const { userId, items, shippingInfo, coupon } = req.body;
 
-    const user = await User.findById(id).select("name");
+    if (!userId || !items || !shippingInfo) {
+      return next(new ErrorHandler("Missing required fields", 400));
+    }
+
+    const user = await User.findById(userId).select("name");
     if (!user) return next(new ErrorHandler("Please login first", 401));
-
-    const {
-      items,
-      shippingInfo,
-      coupon,
-    }: {
-      items: OrderItemType[];
-      shippingInfo: ShippingInfoType | undefined;
-      coupon: string | undefined;
-    } = req.body;
-
-    if (!items) return next(new ErrorHandler("Please send items", 400));
-    if (!shippingInfo)
-      return next(new ErrorHandler("Please send shipping info", 400));
 
     let discountAmount = 0;
     if (coupon) {
@@ -45,11 +48,11 @@ export const createPaymentIntent = TryCatch(
       discountAmount = discount.amount;
     }
 
-    const productIDs = items.map((item) => item.productId);
+    const productIDs = items.map((item: OrderItemType) => item.productId);
     const products = await Product.find({ _id: { $in: productIDs } });
 
-    const subtotal = products.reduce((prev, curr) => {
-      const item = items.find((i) => i.productId === curr._id.toString());
+    const subtotal = products.reduce((prev: number, curr: any) => {
+      const item = items.find((i: OrderItemType) => i.productId === curr._id.toString());
       if (!item) return prev;
       return curr.price * item.quantity + prev;
     }, 0);
