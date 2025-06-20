@@ -16,29 +16,26 @@ const razorpay = new Razorpay({
 });
 
 // ✅ Create Razorpay Order
-export const createPaymentIntent = TryCatch(
-  async (
-    req: Request<
-      any,
-      any,
-      {
-        userId: string;
-        items: OrderItemType[];
-        shippingInfo: ShippingInfoType;
-        coupon?: string;
-      }
-    >,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const { userId, items, shippingInfo, coupon } = req.body;
-
-    if (!userId || !items || !shippingInfo) {
-      return next(new ErrorHandler("Missing required fields", 400));
-    }
+const createPaymentIntent = TryCatch(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {
+      userId,
+      items,
+      shippingInfo,
+      coupon,
+    }: {
+      userId: string;
+      items: OrderItemType[];
+      shippingInfo: ShippingInfoType | undefined;
+      coupon: string | undefined;
+    } = req.body;
 
     const user = await User.findById(userId).select("name");
     if (!user) return next(new ErrorHandler("Please login first", 401));
+
+    if (!items) return next(new ErrorHandler("Please send items", 400));
+    if (!shippingInfo)
+      return next(new ErrorHandler("Please send shipping info", 400));
 
     let discountAmount = 0;
     if (coupon) {
@@ -48,11 +45,11 @@ export const createPaymentIntent = TryCatch(
       discountAmount = discount.amount;
     }
 
-    const productIDs = items.map((item: OrderItemType) => item.productId);
+    const productIDs = items.map((item) => item.productId);
     const products = await Product.find({ _id: { $in: productIDs } });
 
-    const subtotal = products.reduce((prev: number, curr: any) => {
-      const item = items.find((i: OrderItemType) => i.productId === curr._id.toString());
+    const subtotal = products.reduce((prev, curr) => {
+      const item = items.find((i) => i.productId === curr._id.toString());
       if (!item) return prev;
       return curr.price * item.quantity + prev;
     }, 0);
@@ -88,7 +85,7 @@ export const createPaymentIntent = TryCatch(
 );
 
 // ✅ Verify Razorpay Payment
-export const verifyPayment = TryCatch(
+const verifyPayment = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
@@ -110,7 +107,7 @@ export const verifyPayment = TryCatch(
 );
 
 // ✅ Coupon: Create
-export const newCoupon = TryCatch(async (req, res, next) => {
+const newCoupon = TryCatch(async (req, res, next) => {
   const { code, amount } = req.body;
 
   if (!code || !amount)
@@ -125,7 +122,7 @@ export const newCoupon = TryCatch(async (req, res, next) => {
 });
 
 // ✅ Coupon: Apply
-export const applyDiscount = TryCatch(async (req, res, next) => {
+const applyDiscount = TryCatch(async (req, res, next) => {
   const { coupon } = req.query;
 
   const discount = await Coupon.findOne({ code: coupon });
@@ -139,13 +136,13 @@ export const applyDiscount = TryCatch(async (req, res, next) => {
 });
 
 // ✅ Coupon: Get All
-export const allCoupons = TryCatch(async (req, res, next) => {
+const allCoupons = TryCatch(async (req, res, next) => {
   const coupons = await Coupon.find({});
   res.status(200).json({ success: true, coupons });
 });
 
 // ✅ Coupon: Get Single
-export const getCoupon = TryCatch(async (req, res, next) => {
+const getCoupon = TryCatch(async (req, res, next) => {
   const { id } = req.params;
 
   const coupon = await Coupon.findById(id);
@@ -155,7 +152,7 @@ export const getCoupon = TryCatch(async (req, res, next) => {
 });
 
 // ✅ Coupon: Update
-export const updateCoupon = TryCatch(async (req, res, next) => {
+const updateCoupon = TryCatch(async (req, res, next) => {
   const { id } = req.params;
   const { code, amount } = req.body;
 
@@ -173,7 +170,7 @@ export const updateCoupon = TryCatch(async (req, res, next) => {
 });
 
 // ✅ Coupon: Delete
-export const deleteCoupon = TryCatch(async (req, res, next) => {
+const deleteCoupon = TryCatch(async (req, res, next) => {
   const { id } = req.params;
 
   const coupon = await Coupon.findByIdAndDelete(id);
@@ -184,3 +181,15 @@ export const deleteCoupon = TryCatch(async (req, res, next) => {
     message: `Coupon ${coupon.code} Deleted Successfully`,
   });
 });
+
+// ✅ Export all handlers
+export {
+  createPaymentIntent,
+  verifyPayment,
+  newCoupon,
+  applyDiscount,
+  allCoupons,
+  getCoupon,
+  updateCoupon,
+  deleteCoupon,
+};
