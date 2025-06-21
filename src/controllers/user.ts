@@ -48,7 +48,7 @@ export const newUser = TryCatch(
     return res.status(201).json({
       success: true,
       message: `Welcome, ${user.name}`,
-      user,
+      user: user.toObject(),
       token, // ✅ Send token to frontend
     });
   }
@@ -56,14 +56,17 @@ export const newUser = TryCatch(
 
 export const getAllUsers = TryCatch(async (req, res, next) => {
   const users = await User.find({});
-  return res.status(200).json({ success: true, users });
+  return res.status(200).json({
+  success: true,
+  users: users.map((user) => user.toObject()),
+});
 });
 
 export const getUser = TryCatch(async (req, res, next) => {
   const id = req.params.id;
   const user = await User.findById(id);
   if (!user) return next(new ErrorHandler("Invalid Id", 400));
-  return res.status(200).json({ success: true, user });
+  return res.status(200).json({ success: true, user: user.toObject() });
 });
 
 export const deleteUser = TryCatch(async (req, res, next) => {
