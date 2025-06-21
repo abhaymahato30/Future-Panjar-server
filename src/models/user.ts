@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import validator from "validator";
+import isEmail  from "validator"; // ✅ Corrected import
 
-interface IUser extends Document {
+export interface IUser extends Document {
   _id: string;
   name: string;
   email: string;
@@ -11,8 +11,7 @@ interface IUser extends Document {
   dob: Date;
   createdAt: Date;
   updatedAt: Date;
-  //   Virtual Attribute
-  age: number;
+  age: number; // virtual attribute
 }
 
 const schema = new mongoose.Schema(
@@ -27,9 +26,9 @@ const schema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: [true, "Email already Exist"],
-      required: [true, "Please enter Name"],
-      validate: validator.default.isEmail,
+      unique: [true, "Email already exists"],
+      required: [true, "Please enter Email"],
+      validate: [isEmail, "Please provide a valid Email"], // ✅ Fixed here
     },
     photo: {
       type: String,
@@ -47,7 +46,7 @@ const schema = new mongoose.Schema(
     },
     dob: {
       type: Date,
-      required: [true, "Please enter Date of birth"],
+      required: [true, "Please enter Date of Birth"],
     },
   },
   {

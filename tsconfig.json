@@ -5,6 +5,7 @@
     "rootDir": "src",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "strict": true
+    "strict": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   }
 }

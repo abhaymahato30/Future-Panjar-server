@@ -1,5 +1,4 @@
 import express from "express";
-import { adminOnly } from "../middlewares/auth.js";
 import {
   allCoupons,
   applyDiscount,
@@ -8,27 +7,29 @@ import {
   getCoupon,
   newCoupon,
   updateCoupon,
+  verifyPayment,
 } from "../controllers/payment.js";
+import { isAuthenticated, authorizeRoles } from "../middlewares/auth.js";
 
 const app = express.Router();
 
-// route - /api/v1/payment/create
-app.post("/create", createPaymentIntent);
+// ✅ Authenticated users can create payment orders
+app.post("/create", isAuthenticated, createPaymentIntent);
 
-// route - /api/v1/payment/coupon/new
-app.get("/discount", applyDiscount);
+// ✅ Verify Razorpay payment
+app.post("/verify", isAuthenticated, verifyPayment);
 
-// route - /api/v1/payment/coupon/new
-app.post("/coupon/new", adminOnly, newCoupon);
+// ✅ Authenticated users can apply discount
+app.get("/discount", isAuthenticated, applyDiscount);
 
-// route - /api/v1/payment/coupon/all
-app.get("/coupon/all", adminOnly, allCoupons);
+// ✅ Admin-only routes for managing coupons
+app.post("/coupon/new", isAuthenticated, authorizeRoles("admin"), newCoupon);
+app.get("/coupon/all", isAuthenticated, authorizeRoles("admin"), allCoupons);
 
-// route - /api/v1/payment/coupon/:id
 app
   .route("/coupon/:id")
-  .get(adminOnly, getCoupon)
-  .put(adminOnly, updateCoupon)
-  .delete(adminOnly, deleteCoupon);
+  .get(isAuthenticated, authorizeRoles("admin"), getCoupon)
+  .put(isAuthenticated, authorizeRoles("admin"), updateCoupon)
+  .delete(isAuthenticated, authorizeRoles("admin"), deleteCoupon);
 
 export default app;
