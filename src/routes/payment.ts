@@ -14,7 +14,7 @@ import { isAuthenticated, authorizeRoles } from "../middlewares/auth.js";
 const app = express.Router();
 
 // ✅ Authenticated users can create payment orders
-app.post("/create", isAuthenticated, createPaymentIntent);
+app.post("/create", createPaymentIntent);
 
 // ✅ Verify Razorpay payment
 app.post("/verify", isAuthenticated, verifyPayment);
