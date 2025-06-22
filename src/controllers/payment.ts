@@ -9,11 +9,7 @@ import { Product } from "../models/product.js";
 import { User } from "../models/user.js";
 import { OrderItemType, ShippingInfoType } from "../types/types.js";
 
-// ✅ Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_SECRET!,
-});
+
 
 // ✅ Create Razorpay Order
 const createPaymentIntent = TryCatch(
@@ -29,7 +25,10 @@ const createPaymentIntent = TryCatch(
       shippingInfo: ShippingInfoType | undefined;
       coupon: string | undefined;
     } = req.body;
-
+ const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_SECRET!,
+    });
     const user = await User.findById(userId).select("name");
     if (!user) return next(new ErrorHandler("Please login first", 401));
 
