@@ -38,7 +38,7 @@ export const redis = new Redis(process.env.REDIS_URI!, {
 redis.on("error", (err) => {
   console.error("Redis error", err);
 });
-
+console.log(process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_SECRET);
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,

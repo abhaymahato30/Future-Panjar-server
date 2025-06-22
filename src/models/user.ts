@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import isEmail  from "validator"; // ✅ Corrected import
+import isEmail from "validator/lib/isEmail.js"; // ✅ Correct import
 
 export interface IUser extends Document {
   _id: string;
@@ -28,7 +28,7 @@ const schema = new mongoose.Schema(
       type: String,
       unique: [true, "Email already exists"],
       required: [true, "Please enter Email"],
-      validate: [isEmail, "Please provide a valid Email"], // ✅ Fixed here
+      validate: [isEmail, "Please provide a valid Email"],
     },
     photo: {
       type: String,
@@ -53,6 +53,9 @@ const schema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+schema.set("toJSON", { virtuals: true });
+schema.set("toObject", { virtuals: true });
 
 schema.virtual("age").get(function () {
   const today = new Date();
