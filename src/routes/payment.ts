@@ -3,7 +3,6 @@ import {
   createPaymentIntent,
   verifyPayment,
 } from "../controllers/payment.js";
-import { isAuthenticated } from "../middlewares/auth.js";
 
 const app = express.Router();
 
@@ -11,6 +10,6 @@ const app = express.Router();
 app.post("/create", createPaymentIntent);
 
 // ✅ Verify Razorpay payment (still requires login to create actual order)
-app.post("/verify", isAuthenticated, verifyPayment);
+app.post("/verify", verifyPayment);
 
 export default app;
