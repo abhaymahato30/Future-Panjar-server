@@ -7,7 +7,7 @@ import ErrorHandler from "../utils/utility-class.js";
 import { Coupon } from "../models/coupon.js";
 import { Product } from "../models/product.js";
 import { OrderItemType, ShippingInfoType } from "../types/types.js";
-
+import { Order } from "../models/order.js";
 // ✅ Create Razorpay Order (No userId required)
 const createPaymentIntent = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -82,26 +82,53 @@ const createPaymentIntent = TryCatch(
 );
 
 // ✅ Verify Razorpay Payment
+// ✅ Verify Razorpay Payment and Store Order
 const verifyPayment = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      items,
+      shippingInfo,
+      firebaseUserId,
+      total,
+      discount,
+    } = req.body;
 
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    if (generatedSignature === razorpay_signature) {
-      res.status(200).json({
-        success: true,
-        message: "Payment verified successfully",
-      });
-    } else {
+    if (generatedSignature !== razorpay_signature) {
       return next(new ErrorHandler("Payment verification failed", 400));
     }
+
+    // ✅ Save order to DB
+    await Order.create({
+      orderItems: items,
+      shippingInfo,
+      user: firebaseUserId,
+      total,
+      discount,
+      paymentMethod: "Online",
+      paymentInfo: {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        status: "Paid",
+      },
+      status: "Processing",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Payment verified and order placed",
+    });
   }
 );
+
 
 // ✅ Export
 export { createPaymentIntent, verifyPayment };
