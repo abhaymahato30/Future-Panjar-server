@@ -3,6 +3,7 @@ import isEmail from "validator/lib/isEmail.js"; // ✅ Correct import
 
 export interface IUser extends Document {
   _id: string;
+  uid: string;
   name: string;
   email: string;
   photo: string;
