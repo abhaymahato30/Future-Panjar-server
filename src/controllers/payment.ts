@@ -111,7 +111,10 @@ const verifyPayment = TryCatch(
       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
-
+   // ✅ Log expected and received signature
+    console.log("razorpay_order_id:", razorpay_order_id);
+    console.log("Received Signature:", razorpay_signature);
+    console.log("Generated Signature:", generatedSignature);
     if (generatedSignature !== razorpay_signature) {
       return next(new ErrorHandler("Payment verification failed", 400));
     }
