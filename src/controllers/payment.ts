@@ -85,62 +85,83 @@ const createPaymentIntent = TryCatch(
 // ✅ Verify Razorpay Payment and Store Order
 const verifyPayment = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      items,
-      shippingInfo,
-      firebaseUserId,
-      total,
-      discount,
-    } = req.body;
-
-    if (
-      !razorpay_order_id ||
-      !razorpay_payment_id ||
-      !razorpay_signature ||
-      !items ||
-      !shippingInfo ||
-      !firebaseUserId
-    ) {
-      return next(new ErrorHandler("Missing required fields for verification", 400));
-    }
-
-    const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET!)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
-   // ✅ Log expected and received signature
-    console.log("razorpay_order_id:", razorpay_order_id);
-    console.log("Received Signature:", razorpay_signature);
-    console.log("Generated Signature:", generatedSignature);
-    if (generatedSignature !== razorpay_signature) {
-      return next(new ErrorHandler("Payment verification failed", 400));
-    }
-
-    await Order.create({
-      orderItems: items,
-      shippingInfo,
-      user: firebaseUserId,
-      total,
-      discount,
-      paymentMethod: "Online",
-      paymentInfo: {
+    try {
+      const {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        status: "Paid",
-      },
-      status: "Processing",
-    });
+        items,
+        shippingInfo,
+        firebaseUserId,
+        total,
+        discount,
+      } = req.body;
 
-    res.status(200).json({
-      success: true,
-      message: "Payment verified and order placed",
-    });
+      // Validate required fields
+      if (
+        !razorpay_order_id ||
+        !razorpay_payment_id ||
+        !razorpay_signature ||
+        !items ||
+        !shippingInfo ||
+        !firebaseUserId
+      ) {
+        console.error("❌ Missing required fields in verification");
+        return next(new ErrorHandler("Missing required fields for verification", 400));
+      }
+
+      // Check Razorpay Secret
+      if (!process.env.RAZORPAY_SECRET) {
+        console.error("❌ RAZORPAY_SECRET not set in environment variables.");
+        return next(new ErrorHandler("Internal Server Error: Secret key missing", 500));
+      }
+
+      // Signature verification
+      const generatedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+
+      console.log("✅ razorpay_order_id:", razorpay_order_id);
+      console.log("✅ razorpay_payment_id:", razorpay_payment_id);
+      console.log("✅ Received Signature:", razorpay_signature);
+      console.log("✅ Generated Signature:", generatedSignature);
+
+      if (generatedSignature !== razorpay_signature) {
+        console.warn("❌ Signature mismatch");
+        return next(new ErrorHandler("Payment verification failed", 400));
+      }
+
+      // Create order
+      const order = await Order.create({
+        orderItems: items,
+        shippingInfo,
+        user: firebaseUserId,
+        total,
+        discount,
+        paymentMethod: "Online",
+        paymentInfo: {
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          status: "Paid",
+        },
+        status: "Processing",
+      });
+
+      console.log("✅ Order created:", order._id);
+
+      res.status(200).json({
+        success: true,
+        message: "Payment verified and order placed",
+      });
+    } catch (error) {
+      console.error("🔥 Error in payment verification:", error);
+      return next(new ErrorHandler("Internal Server Error", 500));
+    }
   }
 );
+
 
 
 
