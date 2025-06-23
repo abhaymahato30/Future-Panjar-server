@@ -96,6 +96,17 @@ const verifyPayment = TryCatch(
       discount,
     } = req.body;
 
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
+      !items ||
+      !shippingInfo ||
+      !firebaseUserId
+    ) {
+      return next(new ErrorHandler("Missing required fields for verification", 400));
+    }
+
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -105,7 +116,6 @@ const verifyPayment = TryCatch(
       return next(new ErrorHandler("Payment verification failed", 400));
     }
 
-    // ✅ Save order to DB
     await Order.create({
       orderItems: items,
       shippingInfo,
@@ -128,6 +138,7 @@ const verifyPayment = TryCatch(
     });
   }
 );
+
 
 
 // ✅ Export
