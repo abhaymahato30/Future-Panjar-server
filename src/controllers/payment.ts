@@ -82,7 +82,7 @@ const createPaymentIntent = TryCatch(
 );
 
 // ✅ Verify Razorpay Payment
-// ✅ Verify Razorpay Payment and Store Order
+
 const verifyPayment = TryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -95,6 +95,9 @@ const verifyPayment = TryCatch(
         firebaseUserId,
         total,
         discount,
+        shippingCharges,
+        tax,
+        subtotal,
       } = req.body;
 
       // Validate required fields
@@ -104,16 +107,23 @@ const verifyPayment = TryCatch(
         !razorpay_signature ||
         !items ||
         !shippingInfo ||
-        !firebaseUserId
+        !firebaseUserId ||
+        shippingCharges === undefined ||
+        tax === undefined ||
+        subtotal === undefined
       ) {
         console.error("❌ Missing required fields in verification");
-        return next(new ErrorHandler("Missing required fields for verification", 400));
+        return next(
+          new ErrorHandler("Missing required fields for verification", 400)
+        );
       }
 
       // Check Razorpay Secret
       if (!process.env.RAZORPAY_SECRET) {
         console.error("❌ RAZORPAY_SECRET not set in environment variables.");
-        return next(new ErrorHandler("Internal Server Error: Secret key missing", 500));
+        return next(
+          new ErrorHandler("Internal Server Error: Secret key missing", 500)
+        );
       }
 
       // Signature verification
@@ -137,6 +147,9 @@ const verifyPayment = TryCatch(
         orderItems: items,
         shippingInfo,
         user: firebaseUserId,
+        subtotal,
+        tax,
+        shippingCharges,
         total,
         discount,
         paymentMethod: "Online",
@@ -161,7 +174,6 @@ const verifyPayment = TryCatch(
     }
   }
 );
-
 
 
 
